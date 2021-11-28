@@ -121,8 +121,8 @@ fn main() {
     let mut script = Script::default();
 
     match cli_args.vm_kind.as_deref() {
-        Some("wasmtime") => script.vm_kind(VMKind::Wasmtime),
-        Some("wasmer") => script.vm_kind(VMKind::Wasmer0),
+        // Some("wasmtime") => script.vm_kind(VMKind::Wasmtime),
+        // Some("wasmer") => script.vm_kind(VMKind::Wasmer0),
         Some("wasmer2") => script.vm_kind(VMKind::Wasmer2),
         _ => (),
     };

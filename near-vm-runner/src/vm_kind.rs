@@ -10,22 +10,16 @@ use std::hash::Hash;
 // Additionally, this is public only for the purposes of the standalone VM runner. This API should
 // otherwise be considered a private implementation detail of the `near-vm-runner` crate.
 pub enum VMKind {
-    /// Wasmer 0.17.x VM.
-    Wasmer0,
-    /// Wasmtime VM.
-    Wasmtime,
+    // /// Wasmer 0.17.x VM.
+    // Wasmer0,
+    // /// Wasmtime VM.
+    // Wasmtime,
     //  Wasmer 2.x VM,
     Wasmer2,
 }
 
 impl VMKind {
     pub fn for_protocol_version(protocol_version: ProtocolVersion) -> VMKind {
-        if cfg!(feature = "force_wasmer0") {
-            return VMKind::Wasmer0;
-        }
-        if cfg!(feature = "force_wasmtime") {
-            return VMKind::Wasmtime;
-        }
         if cfg!(feature = "force_wasmer2") {
             return VMKind::Wasmer2;
         }
@@ -33,7 +27,7 @@ impl VMKind {
         if checked_feature!("stable", Wasmer2, protocol_version) {
             VMKind::Wasmer2
         } else {
-            VMKind::Wasmer0
+            VMKind::Wasmer2
         }
     }
 }

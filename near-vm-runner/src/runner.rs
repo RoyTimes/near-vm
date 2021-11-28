@@ -98,16 +98,6 @@ impl VMKind {
     /// This is not intended to be used by code other than standalone-vm-runner.
     pub fn runtime(&self) -> Option<&'static dyn VM> {
         match self {
-            #[cfg(feature = "wasmer0_vm")]
-            Self::Wasmer0 => {
-                use crate::wasmer_runner::Wasmer0VM;
-                Some(&Wasmer0VM as &'static dyn VM)
-            }
-            #[cfg(feature = "wasmtime_vm")]
-            Self::Wasmtime => {
-                use crate::wasmtime_runner::WasmtimeVM;
-                Some(&WasmtimeVM as &'static dyn VM)
-            }
             #[cfg(feature = "wasmer2_vm")]
             Self::Wasmer2 => {
                 use crate::wasmer2_runner::Wasmer2VM;
