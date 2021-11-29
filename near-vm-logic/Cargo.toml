@@ -1,9 +1,9 @@
 [package]
 name = "near-vm-logic"
 version = "0.0.0"
-authors = ["Near Inc <hello@nearprotocol.com>"]
+authors = ["SkyeKiwi <hello@skye.kiwi>","Near Inc <hello@nearprotocol.com>"]
 edition = "2021"
-license = "MIT OR Apache-2.0"
+license = "GPL-3.0"
 readme = "README.md"
 categories = ["wasm"]
 repository = "https://github.com/nearprotocol/nearcore"
