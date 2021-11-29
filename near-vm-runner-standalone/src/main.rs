@@ -177,7 +177,7 @@ fn main() {
     // );
     
     println!("{}", "{");
-    println!("\"outcome\": {:?},", outcome.clone().unwrap());
+    println!("\"outcome\": \"{:?}\",", outcome.clone().unwrap());
 
     println!(
         "\"state\": {:?},",

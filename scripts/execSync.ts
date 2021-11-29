@@ -3,7 +3,7 @@
 
 const { execSync } = require('child_process');
 
-module.exports = function execute(cmd, noLog) {
+const execute = (cmd: string, noLog: boolean) => {
   !noLog && console.log(`$ ${cmd}`);
 
   try {
@@ -12,3 +12,5 @@ module.exports = function execute(cmd, noLog) {
     process.exit(-1);
   }
 };
+
+export {execute};
