@@ -11,7 +11,7 @@ console.log('$ yarn vm', process.argv.slice(2).join(' '));
 
 function compile() {
   // compile the runner
-  execute('cd near-vm-runner-standalone && cargo build --release')
+  execute('cd src/near-vm-runner-standalone && cargo build --release')
 }
 
 function runVM({
@@ -19,10 +19,11 @@ function runVM({
   stateInput = "{}",
   input = "",
   wasmFile = "./wasm/greeting.wasm",
+  contextFile = "./context/system.json",
   profiling = false
 }) {
-  const runnerPath = "./near-vm-runner-standalone/target/release/near-vm-runner-standalone";
-  execute(`${runnerPath} --wasm-file ${wasmFile} --method-name ${methodName} --input \'${input}\' --state \'${stateInput}\' ${profiling ? "--timings" : ""} > result.json`)
+  const runnerPath = "./src/near-vm-runner-standalone/target/release/near-vm-runner-standalone";
+  execute(`${runnerPath} --context-file ${contextFile} --wasm-file ${wasmFile} --method-name ${methodName} --input \'${input}\' --state \'${stateInput}\' ${profiling ? "--timings" : ""} > result.json`)
   
   // parse the output 
   const contentRaw = fs.readFileSync('result.json');
@@ -54,14 +55,31 @@ function runVM({
 
 compile()
 
-const state = runVM({
+let state = {}
+
+state = runVM({
+  contextFile: './context/system.json',
   methodName: 'set_greeting',
-  input: '{"message": "hahahah"}',
+  input: '{"message": "system_hello"}',
   stateInput: '{}',
 })
 
-runVM({
+state = runVM({
+  contextFile: './context/bob.json',
+  methodName: 'set_greeting',
+  input: '{"message": "bob_hello"}',
+  stateInput: JSON.stringify(state),
+})
+
+state = runVM({
+  contextFile: './context/zs.json',
+  methodName: 'set_greeting',
+  input: '{"message": "zs_hello"}',
+  stateInput: JSON.stringify(state),
+})
+
+state = runVM({
   methodName: 'get_greeting',
-  input: '{"account_id": "bob"}',
+  input: '{"account_id": "bob.sk"}',
   stateInput: JSON.stringify(state),
 })
