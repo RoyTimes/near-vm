@@ -16,10 +16,7 @@ use std::sync::{Arc, Mutex};
 
 #[derive(Debug, Clone, BorshSerialize)]
 enum ContractCacheKey {
-    _Version1,
-    _Version2,
-    _Version3,
-    Version4 {
+    Version1 {
         code_hash: CryptoHash,
         vm_config_non_crypto_hash: u64,
         vm_kind: VMKind,
@@ -33,23 +30,17 @@ enum CacheRecord {
     Code(Vec<u8>),
 }
 
-fn vm_hash(vm_kind: VMKind) -> u64 {
-    match vm_kind {
-        VMKind::Wasmer2 => wasmer2_vm_hash(),
-    }
-}
-
 pub fn get_contract_cache_key(
     code: &ContractCode,
     vm_kind: VMKind,
     config: &VMConfig,
 ) -> CryptoHash {
     let _span = tracing::debug_span!(target: "vm", "get_key").entered();
-    let key = ContractCacheKey::Version4 {
+    let key = ContractCacheKey::Version1 {
         code_hash: *code.hash(),
         vm_config_non_crypto_hash: config.non_crypto_hash(),
         vm_kind,
-        vm_hash: vm_hash(vm_kind),
+        vm_hash: wasmer2_vm_hash(),
     };
     near_primitives::hash::hash(&key.try_to_vec().unwrap())
 }

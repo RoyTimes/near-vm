@@ -168,12 +168,17 @@ fn main() {
 
     println!(
         "{:#?}",
-        StandaloneOutput {
+        &StandaloneOutput {
             outcome: outcome.clone(),
             err: err.map(|it| it.to_string()),
             receipts: results.state.get_receipt_create_calls().clone(),
-            state: State(results.state.fake_trie),
+            state: State(results.state.fake_trie.clone()),
         }
+    );
+
+    println!(
+        "{:#?}",
+        State(results.state.fake_trie)
     );
 
     match &outcome {

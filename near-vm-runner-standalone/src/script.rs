@@ -48,7 +48,7 @@ impl Default for Script {
         let runtime_config = config_store.get_config(protocol_version).as_ref();
         Script {
             contracts: Vec::new(),
-            vm_kind: VMKind::for_protocol_version(protocol_version),
+            vm_kind: VMKind::Wasmer2,
             vm_config: runtime_config.wasm_config.clone(),
             protocol_version,
             contract_cache: None,
@@ -246,33 +246,4 @@ fn profile_data_is_per_outcome() {
         res.outcomes[1].0.as_ref().unwrap().profile.host_gas()
             > res.outcomes[3].0.as_ref().unwrap().profile.host_gas()
     );
-}
-
-#[cfg(feature = "no_cache")]
-#[test]
-fn test_evm_slow_deserialize_repro() {
-    fn evm_slow_deserialize_repro(vm_kind: VMKind) {
-        println!("evm_slow_deserialize_repro of {:?}", &vm_kind);
-        tracing_span_tree::span_tree().enable();
-
-        let mut script = Script::default();
-        script.vm_kind(vm_kind);
-        script.contract_cache(true);
-
-        // From near-evm repo, the version of when slow issue reported
-        let contract =
-            script.contract_from_file(Path::new("../near-test-contracts/res/near_evm.wasm"));
-
-        let input =
-            hex::decode(&include_bytes!("../../near-test-contracts/res/ZombieOwnership.bin"))
-                .unwrap();
-
-        script.step(contract, "deploy_code").input(input).repeat(3);
-        let res = script.run();
-        assert_eq!(res.outcomes[0].1, None);
-        assert_eq!(res.outcomes[1].1, None);
-    }
-
-    evm_slow_deserialize_repro(VMKind::Wasmer0);
-    evm_slow_deserialize_repro(VMKind::Wasmer2);
 }
