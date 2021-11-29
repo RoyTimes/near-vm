@@ -166,25 +166,33 @@ fn main() {
     let mut results = script.run();
     let (outcome, err) = results.outcomes.pop().unwrap();
 
-    println!(
-        "{:#?}",
-        &StandaloneOutput {
-            outcome: outcome.clone(),
-            err: err.map(|it| it.to_string()),
-            receipts: results.state.get_receipt_create_calls().clone(),
-            state: State(results.state.fake_trie.clone()),
-        }
-    );
+    // println!(
+    //     "{:#?}",
+    //     &StandaloneOutput {
+    //         outcome: outcome.clone(),
+    //         err: err.map(|it| it.to_string()),
+    //         receipts: results.state.get_receipt_create_calls().clone(),
+    //         state: State(results.state.fake_trie.clone()),
+    //     }
+    // );
+    
+    println!("{}", "{");
+    println!("\"outcome\": {:?},", outcome.clone().unwrap());
 
     println!(
-        "{:#?}",
-        State(results.state.fake_trie)
+        "\"state\": {:?},",
+        serde_json::to_string(&State(results.state.fake_trie)).unwrap()
     );
 
-    match &outcome {
-        Some(outcome) => {
-            println!("{:#?}", outcome.profile);
-        }
-        _ => {}
-    }
+    println!("\"error\": \"{:?}\"", err.map(|it| {
+        it.to_string()
+    }));
+
+    println!("{}", "}")
+    // match &outcome {
+    //     Some(outcome) => {
+    //         println!("{:#?}", outcome.profile);
+    //     }
+    //     _ => {}
+    // }
 }

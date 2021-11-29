@@ -1,0 +1,11 @@
+{
+  "name": "near-vm",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@github.com:RoyTimes/near-vm.git",
+  "author": "SkyeKiwi <hello@skye.kiwi>",
+  "license": "GPL-3.0-or-later",  
+  "scripts": {
+    "vm": "node ./scripts/run.cjs"
+  }
+}

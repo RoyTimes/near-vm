@@ -2545,12 +2545,15 @@ impl std::fmt::Debug for VMOutcome {
         let return_data_str = match &self.return_data {
             ReturnData::None => "None".to_string(),
             ReturnData::ReceiptIndex(_) => "Receipt".to_string(),
-            ReturnData::Value(v) => format!("Value [{} bytes]", v.len()),
+            ReturnData::Value(v) => format!("{:?}", v),
         };
         write!(
-            f,
-            "VMOutcome: balance {} storage_usage {} return data {} burnt gas {} used gas {}",
-            self.balance, self.storage_usage, return_data_str, self.burnt_gas, self.used_gas
+            f, "{}", return_data_str
         )
+        // write!(
+        //     f,
+        //     "VMOutcome: balance {} storage_usage {} return data {} burnt gas {} used gas {}",
+        //     self.balance, self.storage_usage, return_data_str, self.burnt_gas, self.used_gas
+        // )
     }
 }
