@@ -6,7 +6,9 @@
   "author": "SkyeKiwi <hello@skye.kiwi>",
   "license": "GPL-3.0-or-later",
   "scripts": {
-    "vm": "npx ts-node ./scripts/vm.ts"
+    "vm": "npx ts-node ./scripts/vm.ts",
+    "build": "npx ts-node ./scripts/build.ts",
+    "start": "yarn build && yarn vm"
   },
   "devDependencies": {
     "@types/node": "^16.11.10",

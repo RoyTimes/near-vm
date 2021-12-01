@@ -4,6 +4,10 @@ This VM is intended to be the secret runtime VM for the SkyeKiwi Network. Ported
 
 ## Usage
 
+Run `yarn build` will compile the contract into WASM blob and copy the result to the `wasm` folder of the root directory. 
+
+Run `yarn start` to compile the contract and run vm. Keep in mind that the contract name and paramters are hardcoded for the `greeting` contract (for now).
+
 Run `yarn vm` will write output from the VM to `result.json`.
 
 Excuted With: 
