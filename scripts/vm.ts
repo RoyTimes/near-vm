@@ -55,31 +55,31 @@ function runVM({
 
 compile()
 
-let state = {}
+// let state = {}
 
-state = runVM({
-  contextFile: './context/system.json',
-  methodName: 'set_greeting',
-  input: '{"message": "system_hello"}',
-  stateInput: '{}',
-})
+// state = runVM({
+//   contextFile: './context/system.json',
+//   methodName: 'set_greeting',
+//   input: '{"message": "system_hello"}',
+//   stateInput: '{}',
+// })
 
-state = runVM({
-  contextFile: './context/bob.json',
-  methodName: 'set_greeting',
-  input: '{"message": "bob_hello"}',
-  stateInput: JSON.stringify(state),
-})
+// state = runVM({
+//   contextFile: './context/bob.json',
+//   methodName: 'set_greeting',
+//   input: '{"message": "bob_hello"}',
+//   stateInput: JSON.stringify(state),
+// })
 
-state = runVM({
-  contextFile: './context/zs.json',
-  methodName: 'set_greeting',
-  input: '{"message": "zs_hello"}',
-  stateInput: JSON.stringify(state),
-})
+// state = runVM({
+//   contextFile: './context/zs.json',
+//   methodName: 'set_greeting',
+//   input: '{"message": "zs_hello"}',
+//   stateInput: JSON.stringify(state),
+// })
 
-state = runVM({
-  methodName: 'get_greeting',
-  input: '{"account_id": "bob.sk"}',
-  stateInput: JSON.stringify(state),
-})
+// state = runVM({
+//   methodName: 'get_greeting',
+//   input: '{"account_id": "bob.sk"}',
+//   stateInput: JSON.stringify(state),
+// })

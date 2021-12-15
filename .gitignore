@@ -67,3 +67,6 @@ pytest/.consent
 
 # logs from mocknet nodes
 /pytest/logs/
+
+/host/mock/*.contract
+/host/mock/*.wasm
