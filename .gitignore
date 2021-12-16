@@ -70,3 +70,4 @@ pytest/.consent
 
 /host/mock/*.contract
 /host/mock/*.wasm
+/host/mock/*.json

@@ -82,7 +82,8 @@ const enclaveMock = {
           input: JSON.stringify(call.parameters),
           wasmFile: `${configuration.localStoragePath}${call.contractId}.wasm`,
           origin: u8aToHex(decodeAddress(call.origin)),
-          profiling: false
+          profiling: false,
+          contractId: currentContractId
         }
 
         if (instance.readState() === "{}")

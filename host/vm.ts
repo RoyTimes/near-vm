@@ -1,6 +1,7 @@
 import fs from 'fs';
 import { fromByteArray, toByteArray } from 'base64-js';
 import { u8aToString } from '@skyekiwi/util';
+import configuration from './config'
 
 const { execute } = require('../scripts/execSync');
 
@@ -39,13 +40,15 @@ export function runVM({
   input = "",
   wasmFile = "./wasm/greeting.wasm",
   origin = "system.sk",
-  profiling = false
+  profiling = false,
+  contractId = "0x000000"
 }): string {
+  const outputPath = `${configuration.localStoragePath}${contractId}.json`;
   const runnerPath = "./src/near-vm-runner-standalone/target/release/near-vm-runner-standalone";
-  execute(`${runnerPath} --context '${injectOrigin(origin)}' --wasm-file '${wasmFile}' --method-name '${methodName}' --input ${input} --state ${stateInput} ${profiling ? "--timings" : ""} > result.json`)
+  execute(`${runnerPath} --context '${injectOrigin(origin)}' --wasm-file '${wasmFile}' --method-name '${methodName}' --input ${input} --state ${stateInput} ${profiling ? "--timings" : ""} > ${outputPath}`)
   
   // parse the output 
-  const contentRaw = fs.readFileSync('result.json');
+  const contentRaw = fs.readFileSync(outputPath);
   const content = JSON.parse(contentRaw.toString());
   const stateB64 = JSON.parse(content.state);
   let state: {[key: string]: string} = {}
