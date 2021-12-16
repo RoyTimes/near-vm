@@ -38,7 +38,7 @@ export function runVM({
   stateInput = "{}",
   input = "",
   wasmFile = "./wasm/greeting.wasm",
-  origin = "system",
+  origin = "system.sk",
   profiling = false
 }): string {
   const runnerPath = "./src/near-vm-runner-standalone/target/release/near-vm-runner-standalone";
@@ -55,5 +55,6 @@ export function runVM({
     const v = u8aToString(toByteArray(stateB64[key]))
     state[k] = v;
   }
+  console.log(state)
   return stateB64;
 }

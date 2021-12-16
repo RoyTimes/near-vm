@@ -1,13 +1,14 @@
 // Copyright 2021 @skyekiwi/s-contract authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import type { Call, RequestInitializeContract } from '@skyekiwi/s-contract/types'
+import type { RequestInitializeContract } from '@skyekiwi/s-contract/types'
 
 import { expose } from 'threads/worker';
-import { getLogger, indexToString, stringToIndex } from '@skyekiwi/util'
+import { getLogger, indexToString, stringToIndex, u8aToHex } from '@skyekiwi/util'
 import { File } from '@skyekiwi/file'
 import { SContractPersistent, SContractReader } from '@skyekiwi/s-contract';
 import { DefaultSealer } from '@skyekiwi/crypto'
+import { decodeAddress } from '@polkadot/util-crypto'
 
 import {runVM} from './vm'
 
@@ -61,47 +62,52 @@ const enclaveMock = {
     currentHighLocalCallIndex = instance.getHighLocalCallIndex();
     currentHighRemoteCallIndex = highRemoteCallIndex;
 
+    logger.info(`contract public key ${u8aToHex(instance.getContractPublicKey())}`)
     logger.info(`contract ${contractId} initialization success`)
   },
-  async dispatchCall(call: Call, executor: (config: object) => string): Promise<void> {
+  async dispatchCall(_call: string): Promise<void> {
     const logger = getLogger('enclaveMock.dispatchCall');
 
     const currentHighLocalCallIndexNumber = stringToIndex(currentHighLocalCallIndex)
+    try {
+      const call = instance.decodeCall(_call);
+      logger.info(`dispatched call ${call.callIndex}, local call ${currentHighLocalCallIndex}`);
 
-    logger.info(`dispatched call ${call.callIndex}, local call ${currentHighLocalCallIndex}`);
+      const callIndexNumber = stringToIndex(call.callIndex);
+      if (callIndexNumber === currentHighLocalCallIndexNumber + 1) {
 
-    const callIndexNumber = stringToIndex(call.callIndex);
-    if (callIndexNumber === currentHighLocalCallIndexNumber + 1) {
+        const config = {
+          methodName: call.methodName,
+          stateInput: JSON.stringify(instance.readState()),
+          input: JSON.stringify(call.parameters),
+          wasmFile: `${configuration.localStoragePath}${call.contractId}.wasm`,
+          origin: u8aToHex(decodeAddress(call.origin)),
+          profiling: false
+        }
 
-      console.log(instance.readState())
-      const config = {
-        methodName: call.methodName,
-        stateInput: JSON.stringify(instance.readState()),
-        input: JSON.stringify(call.parameters),
-        wasmFile: `${configuration.localStoragePath}${call.contractId}.wasm`,
-        origin: 'alice',//call.origin,
-        profiling: false
-      }
+        if (instance.readState() === "{}")
+          delete config['stateInput']
 
-      if (instance.readState() === "{}") 
-        delete config['stateInput']
+        const nextState = runVM(config);
+        logger.info(JSON.stringify(nextState));
 
-      const nextState = runVM(config);
-      logger.info(JSON.stringify(nextState));
+        instance.writeState(JSON.stringify(nextState))
 
-      instance.writeState(JSON.stringify(nextState))
-
-      currentHighLocalCallIndex = indexToString(currentHighLocalCallIndexNumber + 1);
-    } else {
-      if (callIndexNumber > currentHighLocalCallIndexNumber) {
-        throw new Error(`needs rolldown, local execution queue too low`);
+        currentHighLocalCallIndex = indexToString(currentHighLocalCallIndexNumber + 1);
       } else {
-        logger.error(`unexpected index - local ${currentHighLocalCallIndexNumber} & remote ${callIndexNumber}`);
-        // pass
+        if (callIndexNumber > currentHighLocalCallIndexNumber) {
+          throw new Error(`needs rolldown, local execution queue too low`);
+        } else {
+          logger.error(`unexpected index - local ${currentHighLocalCallIndexNumber} & remote ${callIndexNumber}`);
+          // pass
+        }
       }
-    }
 
-    logger.info(`contract ${currentContractId} executing call ${call.callIndex} done`)
+      logger.info(`contract ${currentContractId} executing call ${call.callIndex} done`)
+    } catch(err) {
+      logger.warn(err)
+      // pass
+    }    
   },
 }
 

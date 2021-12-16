@@ -4,8 +4,8 @@
 import type { RequestDispatch, RequestInitializeContract, RequestRolldown } from '@skyekiwi/s-contract/types';
 
 import { getLogger, indexToString } from '@skyekiwi/util';
-import { spawn, Worker, Pool } from 'threads'
-import { MockBlockchainEnv } from '@skyekiwi/s-contract';
+import { spawn, Worker } from 'threads'
+import { MockBlockchainEnv } from './blockchain';
 import PQueue from 'p-queue';
 
 const contractId = '0x0001b4';
@@ -96,7 +96,7 @@ export class SContractHost {
         logger.error(`trying to execute contract ${currentContractId}, but no local instance is available`)
       }
       // 
-      this.#queue.add(async() => await this.#instances[currentContractId].dispatchCall(call));
+      this.#queue.add(async() => await this.#instances[currentContractId].dispatchCall(call.call));
     }
   }
 
