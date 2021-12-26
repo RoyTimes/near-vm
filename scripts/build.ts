@@ -13,6 +13,9 @@ function build() {
   // compile the runner
   execute('cd contract && cargo build --target wasm32-unknown-unknown --release');
   execute('cp contract/target/wasm32-unknown-unknown/release/greeting.wasm wasm/');
+  execute('cd src/near-vm-errors && cargo test');
+  execute('cd src/near-vm-logic && cargo test');
+  execute('cd src/near-vm-runner && cargo test');
 }
 
 build();

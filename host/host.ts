@@ -8,8 +8,8 @@ import { spawn, Worker } from 'threads'
 import { MockBlockchainEnv } from './blockchain';
 import PQueue from 'p-queue';
 
-const contractId = '0x0001b4';
-const contractId2 = indexToString(467);
+const contractId = '0x000204';
+const contractId2 = '0x000203';
 const wasmBlobCID = 'Qmc8aHYGquRWeheiQ51xP3Z6EsyQWD89XSVTrQRfQWdFcA';
 
 require('dotenv').config();

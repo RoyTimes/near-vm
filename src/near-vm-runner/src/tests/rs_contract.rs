@@ -6,12 +6,12 @@ use near_vm_errors::{FunctionCallError, VMError, WasmTrap};
 use near_vm_logic::mocks::mock_external::MockedExternal;
 use near_vm_logic::{types::ReturnData, VMConfig, VMOutcome};
 use std::mem::size_of;
-
+use crate::wasmi_runner::WasmiVM;
+use crate::VM;
 use crate::tests::{
     create_context, with_vm_variants, CURRENT_ACCOUNT_ID, LATEST_PROTOCOL_VERSION,
     PREDECESSOR_ACCOUNT_ID, SIGNER_ACCOUNT_ID, SIGNER_ACCOUNT_PK,
 };
-use crate::vm_kind::VMKind;
 
 fn test_contract() -> ContractCode {
     let code = if cfg!(feature = "protocol_feature_alt_bn128") {
@@ -51,111 +51,101 @@ fn arr_u64_to_u8(value: &[u64]) -> Vec<u8> {
 
 #[test]
 pub fn test_read_write() {
-    with_vm_variants(|vm_kind: VMKind| {
-        let code = test_contract();
-        let mut fake_external = MockedExternal::new();
+    let code = test_contract();
+    let mut fake_external = MockedExternal::new();
 
-        let context = create_context(arr_u64_to_u8(&[10u64, 20u64]));
-        let config = VMConfig::test();
-        let fees = RuntimeFeesConfig::test();
+    let context = create_context(arr_u64_to_u8(&[10u64, 20u64]));
+    let config = VMConfig::test();
+    let fees = RuntimeFeesConfig::test();
 
-        let promise_results = vec![];
-        let runtime = vm_kind.runtime().expect("runtime has not been compiled");
-        let result = runtime.run(
-            &code,
-            "write_key_value",
-            &mut fake_external,
-            context,
-            &config,
-            &fees,
-            &promise_results,
-            LATEST_PROTOCOL_VERSION,
-            None,
-        );
-        assert_run_result(result, 0);
+    let promise_results = vec![];
+    let runtime = &WasmiVM as &'static dyn VM;
+    let result = runtime.run(
+        &code,
+        "write_key_value",
+        &mut fake_external,
+        context,
+        &config,
+        &fees,
+        &promise_results,
+        LATEST_PROTOCOL_VERSION,
+        None,
+    );
+    assert_run_result(result, 0);
 
-        let context = create_context(arr_u64_to_u8(&[10u64]));
-        let result = runtime.run(
-            &code,
-            "read_value",
-            &mut fake_external,
-            context,
-            &config,
-            &fees,
-            &promise_results,
-            LATEST_PROTOCOL_VERSION,
-            None,
-        );
-        assert_run_result(result, 20);
-    });
+    let context = create_context(arr_u64_to_u8(&[10u64]));
+    let result = runtime.run(
+        &code,
+        "read_value",
+        &mut fake_external,
+        context,
+        &config,
+        &fees,
+        &promise_results,
+        LATEST_PROTOCOL_VERSION,
+        None,
+    );
+    assert_run_result(result, 20);
 }
 
 #[test]
 pub fn test_stablized_host_function() {
-    with_vm_variants(|vm_kind: VMKind| {
-        let code = test_contract();
-        let mut fake_external = MockedExternal::new();
+    let code = test_contract();
+    let mut fake_external = MockedExternal::new();
 
-        let context = create_context(vec![]);
-        let config = VMConfig::test();
-        let fees = RuntimeFeesConfig::test();
+    let context = create_context(vec![]);
+    let config = VMConfig::test();
+    let fees = RuntimeFeesConfig::test();
 
-        let promise_results = vec![];
-        let runtime = vm_kind.runtime().expect("runtime has not been compiled");
-        let result = runtime.run(
-            &code,
-            "do_ripemd",
-            &mut fake_external,
-            context.clone(),
-            &config,
-            &fees,
-            &promise_results,
-            LATEST_PROTOCOL_VERSION,
-            None,
-        );
-        assert_eq!(result.1, None);
+    let promise_results = vec![];
+    let runtime = &WasmiVM as &'static dyn VM;
+    let result = runtime.run(
+        &code,
+        "do_ripemd",
+        &mut fake_external,
+        context.clone(),
+        &config,
+        &fees,
+        &promise_results,
+        LATEST_PROTOCOL_VERSION,
+        None,
+    );
+    assert_eq!(result.1, None);
 
-        let result = runtime.run(
-            &code,
-            "do_ripemd",
-            &mut fake_external,
-            context,
-            &config,
-            &fees,
-            &promise_results,
-            ProtocolFeature::MathExtension.protocol_version() - 1,
-            None,
-        );
-        match result.1 {
-            Some(VMError::FunctionCallError(FunctionCallError::LinkError { msg: _ })) => {}
-            _ => panic!("should return a link error due to missing import"),
-        }
-    });
+    let result = runtime.run(
+        &code,
+        "do_ripemd",
+        &mut fake_external,
+        context,
+        &config,
+        &fees,
+        &promise_results,
+        ProtocolFeature::MathExtension.protocol_version() - 1,
+        None,
+    );
+    match result.1 {
+        Some(VMError::FunctionCallError(FunctionCallError::LinkError { msg: _ })) => {}
+        _ => panic!("should return a link error due to missing import"),
+    }
 }
 
 macro_rules! def_test_ext {
     ($name:ident, $method:expr, $expected:expr, $input:expr, $validator:expr) => {
         #[test]
         pub fn $name() {
-            with_vm_variants(|vm_kind: VMKind| {
-                run_test_ext($method, $expected, $input, $validator, vm_kind)
-            });
+            run_test_ext($method, $expected, $input, $validator)
         }
     };
     ($name:ident, $method:expr, $expected:expr, $input:expr) => {
         #[test]
         pub fn $name() {
-            with_vm_variants(|vm_kind: VMKind| {
-                run_test_ext($method, $expected, $input, vec![], vm_kind)
-            });
+            run_test_ext($method, $expected, $input, vec![])
         }
     };
     ($name:ident, $method:expr, $expected:expr) => {
         #[test]
         pub fn $name() {
-            with_vm_variants(|vm_kind: VMKind| {
-                run_test_ext($method, $expected, &[], vec![], vm_kind)
-            })
+            run_test_ext($method, $expected, &[], vec![])
         }
     };
 }
@@ -165,7 +155,6 @@ fn run_test_ext(
     expected: &[u8],
     input: &[u8],
     validators: Vec<(&str, Balance)>,
-    vm_kind: VMKind,
 ) {
     let code = test_contract();
     let mut fake_external = MockedExternal::new();
@@ -174,7 +163,7 @@ fn run_test_ext(
     let config = VMConfig::test();
     let fees = RuntimeFeesConfig::test();
     let context = create_context(input.to_vec());
-    let runtime = vm_kind.runtime().expect("runtime has not been compiled");
+    let runtime = &WasmiVM as &'static dyn VM;
 
     let (outcome, err) = runtime.run(
         &code,
@@ -269,67 +258,31 @@ def_test_ext!(
     vec![("alice", 100), ("bob", 1)]
 );
 
-#[cfg(feature = "protocol_feature_alt_bn128")]
-def_test_ext!(
-    ext_alt_bn128_pairing_check,
-    "ext_alt_bn128_pairing_check",
-    &[1],
-    &base64::decode("AgAAAHUK2WNxTupDt1oaOshWw3squNVY4PgSyGwGtQYcEWMHJIY1c8C0A3FM466TMq5PSpfDrArT0hpcdfZB7ahoEAQBGgPbBg3Bc03mGw3y1sMJ1WOHDKDKcoevKnSsT+oaKdRvwIF8cDlrJvTm3vAkQe6FvBMrlDvNKKGzreRYqecdEUOjM6W7ZSz6GERlXIDLvjNVCSs6iES0XG65qGuBLR67FmQRS13YfRfUC7rHzAGMhQtSLEHeFBowGoTcGdVdGU+wBJWX8wuD/el5Jt4PdnXI1q/pgrXBp/+ZqfDP6xwfU0pFswaWSENKpoJTUnN7b9DdQCvt1brrBzj7s1/pnxdtrVVnCKXr4tpPSHis+xRTecmMYqr2edoTcyqHPO8eIDGqq8zExaCeqC8Xbot73t71Yn3QRiduupL+Qrl2A04gL7PFXU/wzE7shdWtdV4/mkRZ7IoA9/LU9SH5ACP26QB8VsaiyTYTGsRL/kdG7jMCF7mYi4ZBa4Fy9C/78FDBFw==").unwrap()
-);
-
-#[cfg(feature = "protocol_feature_alt_bn128")]
-def_test_ext!(
-    ext_alt_bn128_g1_sum,
-    "ext_alt_bn128_g1_sum",
-    &base64::decode("6I9NGC6Ikzk7Xw/CIippAtOEsTx4TodcXRjzzu5TLh4EIPsrWPsfnQMtqKfMMF+SHgSphZseRKyej9jTVCT8Aw==").unwrap(),
-    &base64::decode("AgAAAADs00QWBTHQDDU1J1FtsDVGC5rDTICkFAtdvqNcFVO0EsRf4pf1kU9yNWyaj2ligWxqnoZGLtEEu3Ldp8+dgkQpAT+SS7pJZ4ql4b8tnwGv8W020cyHrmLCU15/Hp+LLCsDb34dEXKnY0BG4EoWCfaLdEAFcmAKKBbqXEqkAlbaTDA=").unwrap()
-);
-
-#[cfg(feature = "protocol_feature_alt_bn128")]
-def_test_ext!(
-    ext_alt_bn128_g1_multiexp,
-    "ext_alt_bn128_g1_multiexp",
-    &base64::decode("qoK67D1yppH5iP0qhCrD8Ms+idcZtEry4EegUtSpIylhCyZNbRQ0xVdRe9hQBxZIovzCMwFRMAdcZ5FB+QA6Lg==").unwrap(),
-    &base64::decode("AgAAAOzTRBYFMdAMNTUnUW2wNUYLmsNMgKQUC12+o1wVU7QSxF/il/WRT3I1bJqPaWKBbGqehkYu0QS7ct2nz52CRCn3EXSIf0p4ORYJ7mRmZLWtUyGrqlKl/4DNx2kHDEUrET+SS7pJZ4ql4b8tnwGv8W020cyHrmLCU15/Hp+LLCsD2H5fx6TkvPtG6iZSiHT1Ih1TDyGsHTrOzFWN3hx0FwAaB2tgYeH+WuEKReDHNFmxyi8v597Ji5NP4PU8bZXkGQ==").unwrap()
-);
-
 #[test]
 pub fn test_out_of_memory() {
-    with_vm_variants(|vm_kind: VMKind| {
-        // TODO: currently we only run this test on Wasmer.
-        match vm_kind {
-            VMKind::Wasmtime => return,
-            _ => {}
-        }
 
-        let code = test_contract();
-        let mut fake_external = MockedExternal::new();
+    let code = test_contract();
+    let mut fake_external = MockedExternal::new();
 
-        let context = create_context(Vec::new());
-        let config = VMConfig::free();
-        let fees = RuntimeFeesConfig::free();
-        let runtime = vm_kind.runtime().expect("runtime has not been compiled");
+    let context = create_context(Vec::new());
+    let config = VMConfig::free();
+    let fees = RuntimeFeesConfig::free();
+    let runtime = &WasmiVM as &'static dyn VM;
 
-        let promise_results = vec![];
-        let result = runtime.run(
-            &code,
-            "out_of_memory",
-            &mut fake_external,
-            context,
-            &config,
-            &fees,
-            &promise_results,
-            LATEST_PROTOCOL_VERSION,
-            None,
-        );
-        assert_eq!(
-            result.1,
-            match vm_kind {
-                VMKind::Wasmer0 | VMKind::Wasmer2 => Some(VMError::FunctionCallError(
-                    FunctionCallError::WasmTrap(WasmTrap::Unreachable)
-                )),
-                VMKind::Wasmtime => unreachable!(),
-            }
-        );
-    })
+    let promise_results = vec![];
+    let result = runtime.run(
+        &code,
+        "out_of_memory",
+        &mut fake_external,
+        context,
+        &config,
+        &fees,
+        &promise_results,
+        LATEST_PROTOCOL_VERSION,
+        None,
+    );
+    assert_eq!(
+        result.1,
+        VMError::FunctionCallError(FunctionCallError::WasmTrap(WasmTrap::Unreachable))
+    );
 }
